@@ -1,0 +1,81 @@
+#!bin/bash
+
+#The architecture of your operating system and its kernel version
+echo "#Architecture: $(uname -a)" # or --all
+
+
+#The number of physical processors
+echo "#CPU physical : $(cat /proc/cpuinfo | grep 'physical id' | wc -l)"
+
+
+#The number of virtual processors
+echo "#vCPU : $(cat /proc/cpuinfo | grep 'processor' | wc -l)"
+
+##wc - print newline, word, and byte counts for each FILE, and a total line if more than one FILE is specified.  A word is a non-zero-length sequence of characters delimited by white space.
+##wc -l, --lines    print the newline counts
+
+
+#The current available RAM on your server and its utilization rate as a percentage
+echo "#Memory usage: $(free -m | grep 'Mem' | awk '{printf $3"/"$2"MB"" ""("("%.2f"),$3/$2*100}')%)"
+
+##free: free is a standard command to check memory utilization in Linux.
+##-m, --mebi          show output in mebibytes
+##awk: awk is a powerful command which is specialized for textual data manipulation.
+##$3 - usedRAM, $2 - fullRAM
+
+
+#The current available memory on your server and its utilization rate as a percentage
+echo "#Disk usage: $(df -BM | grep /dev/ | grep -v boot | awk '{sum_fd+=$2}{sum_ud+=$3}END{printf sum_ud"/"("%d""GB"" ""(""%d"),sum_fd/1000,sum_ud/sum_fd*100}')%)"
+
+##sum_fd - fullDisk, sum_ud - usedDisk, df -BM - size in megabytes
+
+
+#The current utilization rate of your processors as a percentage
+echo "#CPU load: $(top -bn 1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" |  awk '{print 100 - $1"%"}')"
+
+##top -b - Send output from top to file or any other programs.
+##Starts top in Batch mode, which could be useful for sending
+           ## output from top to other programs or to a file.  In this
+          ##  mode, top will not accept input and runs until the
+           ## iterations limit you've set with the `-n' command-line
+           ## option or until killed.
+
+
+#The date and time of the last reboot
+echo "#Last boot: $(who -b | awk '{print $3" "$4}')"
+
+##Who is using to print who is logged on, it also displays the time of last system boot. Use the last command to display system reboot and shutdown date and time
+##-b, --boot        time of last system boot
+
+
+#Whether LVM is active or not
+echo "#LVM use: $(if [ $(lsblk | grep "lvm" | wc -l) -gt 0 ]; then echo yes; else echo no; fi)"
+
+##Logical Volume Manager (LVM) is used on Linux to manage hard drives and other storage devices
+
+
+#The number of active connections
+echo "#Connections TCP : $(netstat -an | grep ESTABLISHED | wc -l) ESTABLISHED"
+
+##-a, --all                display all sockets (default: connected)
+##-n, --numeric            don't resolve names
+##TCP stands for Transmission Control Protocol a communications standard that enables application programs and computing devices to exchange messages over a network.
+
+
+#The number of users using the server
+echo "#User log: $(users | wc -w)"
+
+##-w, --words     print the word count
+
+
+#The IPv4 address of your server and its MAC (Media Access Control) address
+echo "#Network: IP $(hostname -I) ($(ip link | grep "link/ether" | awk '{print $2}'))"
+
+## -I, --all-ip-addresses all addresses for the host
+
+
+#The number of commands executed with the sudo program
+echo "#Sudo : $(journalctl _COMM=sudo -q | grep "COMMAND" | wc -l) cmd"
+
+##COMMAND is the command ran.
+##You are currently not seeing messages from other users and the system.  Users in groups 'adm', 'systemd-journal' can see all messages.  Pass -q to turn off this notice.
